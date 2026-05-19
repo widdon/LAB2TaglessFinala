@@ -1,4 +1,4 @@
-package program
+package menu
 
 import algebras.Console
 import algebras.Monad

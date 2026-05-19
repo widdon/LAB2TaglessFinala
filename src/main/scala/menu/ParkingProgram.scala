@@ -1,4 +1,4 @@
-package program
+package menu
 
 import algebras._
 import algebras.Monad.MonadOps

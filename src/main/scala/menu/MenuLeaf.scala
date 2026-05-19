@@ -1,4 +1,4 @@
-package program
+package menu
 
 final case class MenuLeaf[F[_], S, C](
    title: String,

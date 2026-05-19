@@ -1,7 +1,7 @@
 import algebras._
 import domain._
 import interpreters._
-import program._
+import menu._
 import services._
 
 object Main {
