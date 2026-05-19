@@ -4,7 +4,5 @@ trait Console[F[_]] {
 
   def readLine: F[String]
 
-  def printLine(
-                 text: String
-               ): F[Unit]
+  def printLine(text: String): F[Unit]
 }
