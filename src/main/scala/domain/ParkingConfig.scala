@@ -1,12 +1,8 @@
 package domain
 
 final case class ParkingConfig(
-
-                                capacity: Int,
-
-                                hourlyRate: Double,
-
-                                lostTicketFine: Double,
-
-                                roundUpToHour: Boolean
+                                capacity: Int,          // Число мест на парковке
+                                hourlyRate: Double,     // Тариф за час
+                                lostTicketFine: Double, // Штраф за потерянный билет
+                                roundUpToHour: Boolean  // Округлять ли вверх
                               )

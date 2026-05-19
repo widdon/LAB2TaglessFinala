@@ -5,10 +5,6 @@ final case class MenuLeaf[F[_], S, C](
    action: (S, C) => F[S]
  ) extends MenuOption[F, S, C] {
 
-  override def execute(
-                        state: S,
-                        config: C
-                      ): F[S] =
-
+  override def execute(state: S, config: C): F[S] =
     action(state, config)
 }

@@ -6,16 +6,12 @@ final class LoggerInterpreter
 
   extends Logger[IO] {
 
-  override def info(
-                     message: String
-                   ): IO[Unit] =
+  override def info(message: String): IO[Unit] = 
     IO.delay(
       println(s"[INFO] $message")
     )
 
-  override def error(
-                      message: String
-                    ): IO[Unit] =
+  override def error(message: String): IO[Unit] = 
     IO.delay(
       println(s"[ERROR] $message")
     )

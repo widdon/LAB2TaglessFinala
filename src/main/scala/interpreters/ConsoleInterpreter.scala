@@ -11,9 +11,7 @@ final class ConsoleInterpreter
       scala.io.StdIn.readLine()
     )
 
-  override def printLine(
-                          text: String
-                        ): IO[Unit] =
+  override def printLine(text: String): IO[Unit] =
     IO.delay(
       println(text)
     )

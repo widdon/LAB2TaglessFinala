@@ -6,77 +6,46 @@ import services._
 
 object Main {
 
-  def main(
+  def main(args: Array[String]): Unit = {
 
-            args: Array[String]
-
-          ): Unit = {
-
-    implicit val monad: Monad[IO] =
-      IOMonad.ioMonad
+    implicit val monad: Monad[IO] = IOMonad.ioMonad
 
     val parkingConfig =
       ParkingConfig(
-
         capacity = 10,
-
         hourlyRate = 100.0,
-
         lostTicketFine = 5000.0,
-
         roundUpToHour = true
       )
 
-    val initialState =
-      ParkingState.empty
+    val initialState = ParkingState.empty
 
-    val consoleInterpreter =
-      new ConsoleInterpreter
+    val consoleInterpreter = new ConsoleInterpreter
 
-    val loggerInterpreter =
-      new LoggerInterpreter
+    val loggerInterpreter = new LoggerInterpreter
 
-    val repositoryInterpreter =
-      new ParkingRepositoryInterpreter(
-        initialState
-      )
+    val repositoryInterpreter = new ParkingRepositoryInterpreter(initialState)
 
-    val configInterpreter =
-      new ParkingConfigInterpreter(
-        parkingConfig
-      )
+    val configInterpreter = new ParkingConfigInterpreter(parkingConfig)
 
     val parkingService =
       new ParkingService[IO](
 
-        console =
-          consoleInterpreter,
-
-        logger =
-          loggerInterpreter,
-
-        repository =
-          repositoryInterpreter,
-
-        configProvider =
-          configInterpreter
+        console = consoleInterpreter,
+        logger = loggerInterpreter,
+        repository = repositoryInterpreter,
+        configProvider = configInterpreter
       )
 
     val parkingProgram =
       new ParkingProgram[IO](
 
-        console =
-          consoleInterpreter,
-
-        service =
-          parkingService
+        console = consoleInterpreter,
+        service = parkingService
       )
 
     parkingProgram
-      .run(
-        initialState,
-        parkingConfig
-      )
+      .run(initialState, parkingConfig)
       .unsafeRun()
   }
 }

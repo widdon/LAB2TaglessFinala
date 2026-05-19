@@ -6,129 +6,74 @@ import domain._
 import domain.ParkingError._
 
 final class ParkingService[F[_]](
-
                                   console: Console[F],
-
                                   logger: Logger[F],
-
                                   val repository: ParkingRepository[F],
-
                                   configProvider: ParkingLogicProvider[F]
-
                                 )(implicit monad: Monad[F]) {
 
   import monad._
 
   private def findFreeSpot(
-
                             occupied: Set[Int],
-
                             capacity: Int
-
                           ): Option[Int] =
-
-    (1 to capacity)
-      .find(spot => !occupied.contains(spot))
+    (1 to capacity).find(spot => !occupied.contains(spot))
 
   private def calculateParkingCost(
-
                                     entryHour: Int,
-
                                     currentHour: Int,
-
                                     config: ParkingConfig
-
                                   ): Double =
 
-    ParkingCalculator.calculateCost(
-      entryHour,
-      currentHour,
-      config
-    )
+    ParkingCalculator.calculateCost(entryHour, currentHour, config)
 
-  def enterCar(
-
-                carNumber: String
-
-              ): F[Either[ParkingError, Int]] =
+  def enterCar(carNumber: String): F[Either[ParkingError, Int]] =
 
     for {
-
       state <- repository.getState
 
       config <- configProvider.getConfig
 
       result <-
-
         if (state.entryHours.contains(carNumber)) {
 
           flatMap(
-            logger.error(
-              s"Машина $carNumber уже находится на парковке"
-            )
-          ) { _ =>
-
-            pure(
-              Left(CarAlreadyExists)
-            )
-          }
+            logger.error(s"Машина $carNumber уже находится на парковке"))
+            {
+              _ => pure(Left(CarAlreadyExists))
+            }
 
         } else {
 
-          findFreeSpot(
-            state.occupiedSpots,
-            config.capacity
+          findFreeSpot(state.occupiedSpots, config.capacity
           ) match {
 
             case None =>
-
               flatMap(
-                logger.error(
-                  "Нет свободных мест"
-                )
-              ) { _ =>
-
-                pure(
-                  Left(ParkingFull)
-                )
-              }
+                logger.error("Нет свободных мест"))
+                {
+                  _ => pure(Left(ParkingFull))
+                }
 
             case Some(spot) =>
 
               val updatedState =
                 state.copy(
-                  occupiedSpots =
-                    state.occupiedSpots + spot,
+                  occupiedSpots = state.occupiedSpots + spot,
 
-                  entryHours =
-                    state.entryHours +
-                      (
-                        carNumber ->
-                          state.currentHour
-                        ),
+                  entryHours = state.entryHours + (carNumber -> state.currentHour),
 
-                  spotByCar =
-                    state.spotByCar +
-                      (
-                        carNumber ->
-                          spot
-                        )
+                  spotByCar = state.spotByCar + (carNumber -> spot)
                 )
 
               for {
 
-                _ <- repository
-                  .updateState(
-                    updatedState
-                  )
+                _ <- repository.updateState(updatedState)
 
-                _ <- logger.info(
-                  s"Машина $carNumber въехала"
-                )
+                _ <- logger.info(s"Машина $carNumber въехала")
 
-                _ <- logger.info(
-                  s"Назначено место $spot"
-                )
+                _ <- logger.info(s"Назначено место $spot")
 
               } yield Right(spot)
           }
@@ -136,148 +81,94 @@ final class ParkingService[F[_]](
 
     } yield result
 
-  def exitCar(
-
-               carNumber: String
-
-             ): F[Either[ParkingError, Double]] =
+  def exitCar(carNumber: String): F[Either[ParkingError, Double]] =
 
     for {
-
       state <- repository.getState
 
       config <- configProvider.getConfig
 
-      result <-
-
-        state.entryHours.get(carNumber) match {
+      result <- state.entryHours.get(carNumber)
+      match {
 
           case None =>
 
-            flatMap(
-              logger.error(
-                s"Машина $carNumber не найдена"
-              )
-            ) { _ =>
-
-              pure(
-                Left(CarNotFound)
-              )
-            }
+            flatMap(logger.error(s"Машина $carNumber не найдена"))
+              {
+                _ => pure(Left(CarNotFound))
+              }
 
           case Some(entryHour) =>
 
-            val cost =
-              calculateParkingCost(
-                entryHour,
-                state.currentHour,
-                config
-              )
+            val cost = calculateParkingCost(entryHour, state.currentHour, config)
 
-            val spot =
-              state.spotByCar(carNumber)
+            val spot = state.spotByCar(carNumber)
 
             val updatedState =
               state.copy(
-                occupiedSpots =
-                  state.occupiedSpots - spot,
+                occupiedSpots = state.occupiedSpots - spot,
 
-                entryHours =
-                  state.entryHours - carNumber,
+                entryHours = state.entryHours - carNumber,
 
-                spotByCar =
-                  state.spotByCar - carNumber,
+                spotByCar = state.spotByCar - carNumber,
 
-                profit =
-                  state.profit + cost
+                profit = state.profit + cost
               )
 
             for {
 
-              _ <- repository
-                .updateState(
-                  updatedState
-                )
+              _ <- repository.updateState(updatedState)
 
-              _ <- logger.info(
-                s"Машина $carNumber выехала"
-              )
+              _ <- logger.info(s"Машина $carNumber выехала")
 
-              _ <- logger.info(
-                s"Стоимость парковки: $cost"
-              )
+              _ <- logger.info(s"Стоимость парковки: $cost")
 
             } yield Right(cost)
         }
 
     } yield result
 
-  def reportLostTicket(
-
-                        carNumber: String
-
-                      ): F[Either[ParkingError, Double]] =
+  def reportLostTicket(carNumber: String): F[Either[ParkingError, Double]] =
 
     for {
-
       state <- repository.getState
 
       config <- configProvider.getConfig
 
-      result <-
-
-        state.entryHours.get(carNumber) match {
+      result <- state.entryHours.get(carNumber)
+      match {
 
           case None =>
 
-            flatMap(
-              logger.error(
-                s"Машина $carNumber не найдена"
-              )
-            ) { _ =>
-
-              pure(
-                Left(CarNotFound)
-              )
-            }
+            flatMap(logger.error(s"Машина $carNumber не найдена"))
+              {
+                _ =>pure(Left(CarNotFound))
+              }
 
           case Some(_) =>
 
-            val fine =
-              config.lostTicketFine
+            val fine = config.lostTicketFine
 
-            val spot =
-              state.spotByCar(carNumber)
+            val spot = state.spotByCar(carNumber)
 
             val updatedState =
               state.copy(
-                occupiedSpots =
-                  state.occupiedSpots - spot,
+                occupiedSpots = state.occupiedSpots - spot,
 
-                entryHours =
-                  state.entryHours - carNumber,
+                entryHours = state.entryHours - carNumber,
 
-                spotByCar =
-                  state.spotByCar - carNumber,
+                spotByCar = state.spotByCar - carNumber,
 
-                profit =
-                  state.profit + fine
+                profit = state.profit + fine
               )
 
             for {
 
-              _ <- repository
-                .updateState(
-                  updatedState
-                )
+              _ <- repository.updateState(updatedState)
 
-              _ <- logger.error(
-                s"Машина $carNumber потеряла билет"
-              )
+              _ <- logger.error(s"Машина $carNumber потеряла билет")
 
-              _ <- logger.info(
-                s"Штраф: $fine"
-              )
+              _ <- logger.info(s"Штраф: $fine")
 
             } yield Right(fine)
         }
@@ -290,22 +181,13 @@ final class ParkingService[F[_]](
 
       state <- repository.getState
 
-      newHour =
-        state.currentHour + 1
+      newHour = state.currentHour + 1
 
-      updatedState =
-        state.copy(
-          currentHour = newHour
-        )
+      updatedState = state.copy(currentHour = newHour)
 
-      _ <- repository
-        .updateState(
-          updatedState
-        )
+      _ <- repository.updateState(updatedState)
 
-      _ <- logger.info(
-        s"Текущее время: $newHour"
-      )
+      _ <- logger.info(s"Текущее время: $newHour")
 
     } yield newHour
 
@@ -317,32 +199,21 @@ final class ParkingService[F[_]](
 
       config <- configProvider.getConfig
 
-      _ <- console.printLine(
-        "===== СОСТОЯНИЕ ПАРКОВКИ ====="
-      )
+      _ <- console.printLine("===== СОСТОЯНИЕ ПАРКОВКИ =====")
 
-      _ <- console.printLine(
-        s"Текущий час: ${state.currentHour}"
-      )
+      _ <- console.printLine(s"Текущий час: ${state.currentHour}")
 
-      _ <- console.printLine(
-        s"Занято мест: ${state.occupiedSpots.size}"
-      )
+      _ <- console.printLine(s"Занято мест: ${state.occupiedSpots.size}")
 
-      _ <- console.printLine(
-        s"Свободно мест: ${
+      _ <- console.printLine(s"Свободно мест: ${
           config.capacity -
             state.occupiedSpots.size
         }"
       )
 
-      _ <- console.printLine(
-        s"Выручка: ${state.profit}"
-      )
+      _ <- console.printLine(s"Выручка: ${state.profit}")
 
-      _ <- console.printLine(
-        "=============================="
-      )
+      _ <- console.printLine("==============================")
 
     } yield ()
 }
