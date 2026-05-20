@@ -1,14 +1,12 @@
-import algebras._
 import domain._
 import interpreters._
 import menu._
 import services._
+import interpreters.IOMonad.given
 
 object Main {
 
   def main(args: Array[String]): Unit = {
-
-    implicit val monad: Monad[IO] = IOMonad.ioMonad
 
     val parkingConfig =
       ParkingConfig(

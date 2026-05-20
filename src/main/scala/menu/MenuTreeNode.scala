@@ -38,8 +38,7 @@ final case class MenuTreeNode[F[_]](
        |
        |$items
        |0  выход
-       |выбор:
-       |""".stripMargin
+       |выбор:""".stripMargin
   }
 
   override def handleInput(
