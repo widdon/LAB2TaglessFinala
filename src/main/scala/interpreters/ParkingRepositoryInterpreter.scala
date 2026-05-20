@@ -3,14 +3,20 @@ package interpreters
 import algebras.ParkingRepository
 import domain.ParkingState
 
-final class ParkingRepositoryInterpreter(private var state: ParkingState)
-  extends ParkingRepository[IO] {
+final class ParkingRepositoryInterpreter(initialState: ParkingState
+                                        ) extends ParkingRepository[IO] {
 
-  override def getState: IO[ParkingState] =
-    IO.pure(state)
+  private var state: ParkingState = initialState
 
-  override def updateState(newState: ParkingState): IO[Unit] =
-    IO.delay {
-      state = newState
-    }
+  override def getState: IO[ParkingState] = IO.pure(state)
+
+  override def modify(update: ParkingState => ParkingState): IO[ParkingState] =
+  IO.delay {
+
+    val updatedState = update(state)
+
+    state = updatedState
+
+    updatedState
+  }
 }

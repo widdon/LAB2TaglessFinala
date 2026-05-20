@@ -24,9 +24,6 @@ final class ParkingService[F[_]](
 
     repository.getState
 
-  private def updateState(state: ParkingState): F[Unit] =
-    repository.updateState(state)
-
   private def enterError(error: ParkingError): F[Either[ParkingError, Int]] =
     pure(Left(error))
 
@@ -53,7 +50,7 @@ final class ParkingService[F[_]](
 
       _ <- logger.info(s"Машине $carNumber назначено место $spot")
 
-      _ <- updateState(updatedState)
+      _ <- repository.modify { _ =>updatedState}
 
     } yield Right(spot)
   }
@@ -82,7 +79,7 @@ final class ParkingService[F[_]](
 
       _ <- logger.info(s"Машина $carNumber выехала")
 
-      _ <- updateState(updatedState)
+      _ <- repository.modify { _ =>updatedState}
 
     } yield Right(cost)
   }
@@ -111,7 +108,7 @@ final class ParkingService[F[_]](
 
       _ <- logger.info(s"Штраф: $fine")
 
-      _ <- updateState(updatedState)
+      _ <- repository.modify { _ =>updatedState}
 
     } yield Right(fine)
   }
@@ -197,7 +194,7 @@ final class ParkingService[F[_]](
 
       updatedState = state.copy(currentHour = newHour)
 
-      _ <- updateState(updatedState)
+      _ <- repository.modify { _ =>updatedState}
 
       _ <- logger.info(s"Текущее время: $newHour")
 

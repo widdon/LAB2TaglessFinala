@@ -6,5 +6,5 @@ trait ParkingRepository[F[_]] {
 
   def getState: F[ParkingState]
 
-  def updateState(state: ParkingState): F[Unit]
+  def modify(update: ParkingState => ParkingState): F[ParkingState]
 }
