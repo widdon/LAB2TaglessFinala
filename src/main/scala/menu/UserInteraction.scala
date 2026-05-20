@@ -5,7 +5,6 @@ import algebras.Monad
 import algebras.Monad.MonadOps
 
 trait UserInteraction[F[_], S, C] {
-
   implicit def monad: Monad[F]
 
   def console: Console[F]
