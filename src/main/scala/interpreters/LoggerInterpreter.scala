@@ -8,7 +8,7 @@ final class LoggerInterpreter
 
   override def info(message: String): IO[Unit] = 
     IO.delay(
-      println(s"[INFO] $message")
+      println(s"[LOG] $message")
     )
 
   override def error(message: String): IO[Unit] = 
